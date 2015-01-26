@@ -30,6 +30,45 @@
         padding-left: 14px;  /* Regular padding-left + 1. */
         width: 401px;
       }
+      
+      #results {
+        font-family: Arial, Helvetica, sans-serif;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        margin-top: -195px;
+        height: 380px;
+        width: 200px;
+        padding: 5px;
+        z-index: 5;
+        background: #fff;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+      h2 {
+        font-size: 22px;
+        margin: 0 0 5px 0;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        height: 380px;
+        overflow-y: scroll;
+      }
+      li {
+        background-color: #f1f1f1;
+        padding: 10px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      li:nth-child(odd) {
+        background-color: #fcfcfc;
+      }
+      li:hover {
+      	background-color: lightgray;
+      }
     </style>
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyDEzWKlbXaUN34dPi3Wp0a_YHy6qS0-K54">
@@ -38,6 +77,8 @@
       var home = new google.maps.LatLng(39.94997, -83.805418);
       var map;
       var infowindow;
+      var searchAutoComp;
+      var searchBox;
       function initialize() {
         map = new google.maps.Map(document.getElementById('map-canvas'));
         map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(39.95753373131433, -83.8219341773987), new google.maps.LatLng(39.94743406787109, -83.7898764152527)));
@@ -48,17 +89,23 @@
         var searchInput = /** @type {HTMLInputElement} */(
             document.getElementById('search-box'));
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchInput);
-        var searchBox = new google.maps.places.SearchBox(
+        searchBox = new google.maps.places.SearchBox(
           /** @type {HTMLInputElement} */(searchInput));
         
         //add autocomplete to search-box
-        var searchAutoComp = new google.maps.places.Autocomplete(searchInput);
+        searchAutoComp = new google.maps.places.Autocomplete(searchInput);
         
         var request = {
         	location: home,
         	radius: 500
         };
         places.nearbySearch(request, placesCallback);
+        
+        google.maps.event.addListenerOnce(map, 'idle', function(){
+        	var bounds = map.getBounds();
+        	searchAutoComp.setBounds(bounds);
+        	searchBox.setBounds(bounds);
+        });
       }
       
       function placesCallback(results, status) {
@@ -88,5 +135,8 @@
   <body>
   	<input type="text" id="search-box" class="controls" placeholder="Search For Stuff">
 	<div id="map-canvas"></div>
+	<div id="results">
+		<ul id="places"><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li></ul>
+	</div>
   </body>
 </html>
