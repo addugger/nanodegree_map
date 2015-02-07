@@ -14,7 +14,9 @@
   	<input type="text" id="search-box" class="controls" placeholder="Search For Stuff">
 	<div id="map-canvas"></div>
 	<div id="results">
-		<ul id="places"><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li><li>Test</li></ul>
+		<ul id="places" data-bind="foreach: locations().sort(function (l, r) { return l.name() > r.name() ? 1 : -1 })">
+			<li data-bind="text: name"></li>
+		</ul>
 	</div>
   </body>
 </html>

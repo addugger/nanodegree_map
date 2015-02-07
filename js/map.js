@@ -42,6 +42,11 @@ $(document).on("ready", function() {
 		
 		// Associated Google map Marker
 		this.marker = marker;
+		
+		// Detach the locations marker from the map
+		this.unsetMarker = function() {
+			self.marker.setMap(null);
+		}
 	}
 	
 	/**
@@ -49,6 +54,52 @@ $(document).on("ready", function() {
 	 */
 	var ViewModel = function() {
 		var self = this;
+		
+		// Replace contents of self.locations with places returned
+		// from a searchBox search
+		this.addSearchLocations = function(places) {
+			self.emptyLocations();
+			var place;
+			var latLng;
+			var location;
+			var marker;
+			for (var i = 0; i < places.length; i++) {
+				place = places[i];
+				marker = self.createMarker(place);
+				latLng = place.geometry.location;
+				location = new Location(
+						latLng.lat(),
+						latLng.lng(),
+						place.name,
+						place.vicinity,
+						place.type,
+						marker
+				);
+				self.locations.push(location);
+			}
+		}
+		
+		// Helper function to create Google Markers
+		this.createMarker = function(place) {
+			var marker = new google.maps.Marker({
+				map: self.map,
+				position: place.geometry.location
+			});
+			
+			google.maps.event.addListener(marker, "click", function() {
+				self.infowindow.setContent(place.name);
+				self.infowindow.open(self.map, this);
+			});
+		
+			return marker;
+		}
+		
+		this.emptyLocations = function() {
+			for (var i = 0; i < self.locations().length; i++) {
+				self.locations()[i].unsetMarker();
+			}
+			self.locations.removeAll();
+		}
 		
 		// Setup the initial locations
 		this.initLocations = function() {
@@ -78,23 +129,17 @@ $(document).on("ready", function() {
 							place.type,
 							marker
 					);
+					self.locations.push(location);
 				}
 			}
 		}
 		
-		// Helper function to create Google Markers
-		this.createMarker = function(place) {
-			var marker = new google.maps.Marker({
-				map: self.map,
-				position: place.geometry.location
-			});
+		this.initBounds = function() {
+			return new google.maps.LatLngBounds(
+				new google.maps.LatLng(39.93981721161983, -83.83596749496462),
+	    		new google.maps.LatLng(39.96514861499254, -83.77584309768679)
+		    );
 			
-			google.maps.event.addListener(marker, "click", function() {
-				self.infowindow.setContent(place.name);
-				self.infowindow.open(self.map, this);
-			});
-		
-			return marker;
 		}
 		
 		// Initialize the Google map
@@ -102,35 +147,39 @@ $(document).on("ready", function() {
 			// Bind map to the html
 			self.map = new google.maps.Map($("#map-canvas")[0]);
 			// Set initial bounds of the map
-	        self.map.fitBounds(
-	        	new google.maps.LatLngBounds(
-		    		new google.maps.LatLng(39.95753373131433, -83.8219341773987),
-		    		new google.maps.LatLng(39.94743406787109, -83.7898764152527)
-		    	)
-	        );
-	        // This gets around an issue where the bounds weren't known in time
-	        // to initialize the search box.
-	        google.maps.event.addListenerOnce(self.map, "idle", function(){
-		    	var bounds = self.map.getBounds();
-		    	self.searchAutoComp.setBounds(bounds);
-		    	self.searchBox.setBounds(bounds);
+	        self.map.fitBounds(self.bounds);
+	        
+	        // When the map pans or zooms, reset the bounds for the searchBox
+	        // and autoComplete
+	        google.maps.event.addListener(self.map, "idle", function() {
+	        	var bounds = self.map.getBounds();
+	        	self.searchBox.setBounds(bounds);
+	        	self.searchAutoComp.setBounds(bounds);
 	        });
 		}
 		
+		// Initiailze the Google Place Search Box
 		this.initSearchBar = function() {
 			var searchInput = $("#search-box")[0];
 	        self.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchInput);
 	        self.searchBox = new google.maps.places.SearchBox(searchInput);
-	        
+	        self.searchBox.setBounds(self.bounds);
 	        //add autocomplete to search-box
 	        self.searchAutoComp = new google.maps.places.Autocomplete(searchInput);
+	        self.searchAutoComp.setBounds(self.bounds);
+	        
+	        google.maps.event.addListener(self.searchBox, 'places_changed', function() {
+	            self.addSearchLocations(self.searchBox.getPlaces());
+	        });
 		}
 		
 		//list of locations currently available
 		this.locations = ko.observableArray();
 		// The Google map
 		this.map;
-		
+		// The bounds used for the map and searchBox
+		this.bounds = self.initBounds();
+	
 		self.initMap();
 		
 		// Infowindow for the page
