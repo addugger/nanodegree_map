@@ -1,5 +1,10 @@
 @CHARSET "ISO-8859-1";
 
+#innerInfo {
+	height: 300px;
+	width: 500px;
+}
+
 li:hover {
 	background-color: lightgray;
 }

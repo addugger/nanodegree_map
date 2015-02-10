@@ -18,5 +18,10 @@
 			<li data-bind="text: name"></li>
 		</ul>
 	</div>
+	<div id="infoWindow">
+		<div id="innerInfo" data-bind="style: { backgroundImage: currentLocation().img }">
+			<h2 data-bind="text: currentLocation().name"></h2>
+		</div>
+	</div>
   </body>
 </html>

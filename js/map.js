@@ -10,7 +10,7 @@ $(document).on("ready", function() {
 	/**
 	 * This is the model for a location on the map.
 	 */
-	var Location = function(lat, long, name, vicinity, type, marker) {
+	var Location = function(lat, long, name, vicinity, types, marker) {
 		var self = this;
 		
 		// Latitude of this location
@@ -26,13 +26,13 @@ $(document).on("ready", function() {
 		this.vicinity = ko.observable(vicinity);
 		
 		// Type of the location
-		this.type = ko.observable(type);
+		this.types = ko.observableArray(types);
 		
 		// Image url associated with this location
 		//TODO change this to a computed observable that attempts
 		//to set to the streetview image, but sets to noImage if
 		//fails
-		this.img = ko.observable("/img/noImage.png");
+		this.img = ko.observable("url('img/noImage.png')");
 		
 		// Array of links associated with this location.
 		this.links = ko.observableArray();
@@ -72,9 +72,12 @@ $(document).on("ready", function() {
 						latLng.lng(),
 						place.name,
 						place.vicinity,
-						place.type,
+						place.types,
 						marker
 				);
+				// Add "custom property" location to marker to make it possible
+				// to find the location from the marker.
+				marker.set("myLocation", location);
 				self.locations.push(location);
 			}
 		}
@@ -87,18 +90,37 @@ $(document).on("ready", function() {
 			});
 			
 			google.maps.event.addListener(marker, "click", function() {
-				self.infowindow.setContent(place.name);
+				//self.infowindow.setContent(place.name);
 				self.infowindow.open(self.map, this);
+				self.currentLocation(this.get("myLocation"));				
 			});
 		
 			return marker;
 		}
 		
+		// Empties the locations array and unsets all the associated markers
 		this.emptyLocations = function() {
 			for (var i = 0; i < self.locations().length; i++) {
 				self.locations()[i].unsetMarker();
 			}
 			self.locations.removeAll();
+		}
+		
+		// Returns the Location associated with the passed Marker
+		this.getLocationFromMarker = function(marker) {
+			var found = false;
+			var location = null;
+			var i = 0;
+			var len = self.locations().length;
+			while (!found && i < len) {
+				if (marker === self.locations()[i].marker)
+				{
+					location = self.locations[i];
+					found = true;
+				}
+				i++;
+			}
+			return location;
 		}
 		
 		// Setup the initial locations
@@ -129,9 +151,14 @@ $(document).on("ready", function() {
 							place.type,
 							marker
 					);
+					// Add "custom property" location to marker to make it possible
+					// to find the location from the marker.
+					marker.set("myLocation", location);
 					self.locations.push(location);
 				}
+				self.currentLocation(self.locations()[0]);
 			}
+			ko.applyBindings(self, $("#infoWindow")[0]);
 		}
 		
 		this.initBounds = function() {
@@ -175,6 +202,8 @@ $(document).on("ready", function() {
 		
 		//list of locations currently available
 		this.locations = ko.observableArray();
+		// The currently selected location, if any is selected
+		this.currentLocation = ko.observable();
 		// The Google map
 		this.map;
 		// The bounds used for the map and searchBox
@@ -183,7 +212,7 @@ $(document).on("ready", function() {
 		self.initMap();
 		
 		// Infowindow for the page
-		this.infowindow = new google.maps.InfoWindow();
+		this.infowindow = new google.maps.InfoWindow({content: $("#infoWindow")[0]});
 		// The places service
 		this.places = new google.maps.places.PlacesService(self.map);
 		// The google maps search box
@@ -194,5 +223,5 @@ $(document).on("ready", function() {
 		this.initSearchBar();
 		this.initLocations();
 	}
-	ko.applyBindings(new ViewModel());
+	ko.applyBindings(new ViewModel(), $("#results")[0]);
 });
