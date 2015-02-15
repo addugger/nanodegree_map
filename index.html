@@ -15,12 +15,15 @@
 	<div id="map-canvas"></div>
 	<div id="results">
 		<ul id="places" data-bind="foreach: locations().sort(function (l, r) { return l.name() > r.name() ? 1 : -1 })">
-			<li data-bind="text: name"></li>
+			<li data-bind="text: name, css: {selected: selected}, click: $root.selectCurrentLocation"></li>
 		</ul>
 	</div>
 	<div id="infoWindow">
 		<div id="innerInfo" data-bind="style: { backgroundImage: currentLocation().img }">
-			<h2 data-bind="text: currentLocation().name"></h2>
+			<div><h2 data-bind="text: currentLocation().name"></h2></div>
+			<div id="infoDiv">
+				<p data-bind="text: currentLocation().address"></p>
+			</div>
 		</div>
 	</div>
   </body>

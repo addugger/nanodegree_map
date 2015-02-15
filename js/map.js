@@ -7,47 +7,6 @@
 
 $(document).on("ready", function() {
 
-	/**
-	 * This is the model for a location on the map.
-	 */
-	var Location = function(lat, long, name, vicinity, types, marker) {
-		var self = this;
-		
-		// Latitude of this location
-		this.latitude = ko.observable(lat);
-		
-		// Longitude of this location
-		this.longitude = ko.observable(long);
-		
-		// Name of this location
-		this.name = ko.observable(name);
-		
-		// String representation of location
-		this.vicinity = ko.observable(vicinity);
-		
-		// Type of the location
-		this.types = ko.observableArray(types);
-		
-		// Image url associated with this location
-		//TODO change this to a computed observable that attempts
-		//to set to the streetview image, but sets to noImage if
-		//fails
-		this.img = ko.observable("url('img/noImage.png')");
-		
-		// Array of links associated with this location.
-		this.links = ko.observableArray();
-		
-		// Whether or not this location is currently selected
-		this.selected = ko.observable(false);
-		
-		// Associated Google map Marker
-		this.marker = marker;
-		
-		// Detach the locations marker from the map
-		this.unsetMarker = function() {
-			self.marker.setMap(null);
-		}
-	}
 	
 	/**
 	 * ViewModel for the map app.
@@ -55,9 +14,69 @@ $(document).on("ready", function() {
 	var ViewModel = function() {
 		var self = this;
 		
+		/**
+		 * This is the model for a location on the map.
+		 */
+		var Location = function(lat, long, name, vicinity, address, types, marker) {
+			var locSelf = this;
+			
+			// Latitude of this location
+			this.latitude = ko.observable(lat);
+			
+			// Longitude of this location
+			this.longitude = ko.observable(long);
+			
+			// Name of this location
+			this.name = ko.observable(name);
+			
+			// String representation of location
+			this.vicinity = ko.observable(vicinity);
+			
+			// Formatted address string
+			this.address = ko.observable(address);
+			
+			// Type of the location
+			this.types = ko.observableArray(types);
+			
+			// Image url associated with this location
+			//TODO change this to a computed observable that attempts
+			//to set to the streetview image, but sets to noImage if
+			//fails
+			//this.img = ko.observable("url('img/noImage.png')");
+			this.img = ko.computed(function() {
+				var url = "url('http://maps.googleapis.com/maps/api/streetview?size=500x350&location=";
+				url += locSelf.latitude() + ", " + locSelf.longitude();
+				url += "')";
+				return url;
+			}, locSelf);
+			
+			// Array of links associated with this location.
+			this.links = ko.observableArray();
+			
+			// Whether or not this location is currently selected
+			this.selected = ko.computed(function() {
+				var rtn = false;
+				if (self.currentLocation != null)
+				{
+					rtn = (locSelf == self.currentLocation());
+				}
+				return rtn;
+			}, locSelf);
+			
+			// Associated Google map Marker
+			this.marker = marker;
+			
+			// Detach the locations marker from the map
+			this.unsetMarker = function() {
+				locSelf.marker.setMap(null);
+			}
+		}
+		
 		// Replace contents of self.locations with places returned
 		// from a searchBox search
 		this.addSearchLocations = function(places) {
+			self.infowindow.close();
+			self.currentLocation("");
 			self.emptyLocations();
 			var place;
 			var latLng;
@@ -72,6 +91,7 @@ $(document).on("ready", function() {
 						latLng.lng(),
 						place.name,
 						place.vicinity,
+						place.formatted_address,
 						place.types,
 						marker
 				);
@@ -80,6 +100,10 @@ $(document).on("ready", function() {
 				marker.set("myLocation", location);
 				self.locations.push(location);
 			}
+			//self.infowindow = new google.maps.InfoWindow({content: $("#infoWindow")[0]});
+			//ko.cleanNode($("#infoWindow")[0]);
+			//ko.applyBindings(self, $("#infoWindow")[0]);
+			//self.infowindow.setContent($("#infoWindow")[0]);
 		}
 		
 		// Helper function to create Google Markers
@@ -90,9 +114,7 @@ $(document).on("ready", function() {
 			});
 			
 			google.maps.event.addListener(marker, "click", function() {
-				//self.infowindow.setContent(place.name);
-				self.infowindow.open(self.map, this);
-				self.currentLocation(this.get("myLocation"));				
+				self.selectCurrentLocation(this.get("myLocation"));
 			});
 		
 			return marker;
@@ -139,8 +161,14 @@ $(document).on("ready", function() {
 				var latLng;
 				var location;
 				var marker;
+				// Address is not always returned
+				var address = null;
 				for (var i = 0; i < results.length; i++) {
 					place = results[i];
+					if (place.formatted_address != null)
+					{
+						address = place.formatted_address;
+					}
 					marker = self.createMarker(place);
 					latLng = place.geometry.location;
 					location = new Location(
@@ -148,6 +176,7 @@ $(document).on("ready", function() {
 							latLng.lng(),
 							place.name,
 							place.vicinity,
+							address,
 							place.type,
 							marker
 					);
@@ -155,10 +184,15 @@ $(document).on("ready", function() {
 					// to find the location from the marker.
 					marker.set("myLocation", location);
 					self.locations.push(location);
+					address = null;
 				}
-				self.currentLocation(self.locations()[0]);
 			}
-			ko.applyBindings(self, $("#infoWindow")[0]);
+		}
+		
+		this.selectCurrentLocation = function(location) {
+			self.currentLocation(location);
+			self.infowindow.setContent($("#infoWindow").html());
+			self.infowindow.open(self.map, location.marker);
 		}
 		
 		this.initBounds = function() {
@@ -203,7 +237,7 @@ $(document).on("ready", function() {
 		//list of locations currently available
 		this.locations = ko.observableArray();
 		// The currently selected location, if any is selected
-		this.currentLocation = ko.observable();
+		this.currentLocation = ko.observable("");
 		// The Google map
 		this.map;
 		// The bounds used for the map and searchBox
@@ -211,8 +245,12 @@ $(document).on("ready", function() {
 	
 		self.initMap();
 		
-		// Infowindow for the page
-		this.infowindow = new google.maps.InfoWindow({content: $("#infoWindow")[0]});
+		// Infowindow for the page (content has to be reset as infowindow html string
+		// each time because setting to dom element and then closing the infowindow
+		// certain ways causes the dom element to be lost and the infowindow content
+		// stops being updated).
+		this.infowindow = new google.maps.InfoWindow();
+		
 		// The places service
 		this.places = new google.maps.places.PlacesService(self.map);
 		// The google maps search box
@@ -223,5 +261,6 @@ $(document).on("ready", function() {
 		this.initSearchBar();
 		this.initLocations();
 	}
-	ko.applyBindings(new ViewModel(), $("#results")[0]);
+	
+	ko.applyBindings(new ViewModel());
 });

@@ -1,10 +1,38 @@
 @CHARSET "ISO-8859-1";
 
+#infoDiv {
+	margin-top: 100px;
+	height: 150px;
+	font-weight: bold;
+}
+
 #innerInfo {
-	height: 300px;
+	height: 350px;
 	width: 500px;
+	padding: 5px;
+	background-repeat: no-repeat;
+}
+
+#innerInfo div {
+	padding: 5px;
+	border: 1px solid lightgray;
+	background-color: lightgray;
+	opacity: .9;
+	width: 85%;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+h2 {
+	color: black;
+	-webkit-text-fill-color: white; /* Will override color (regardless of order) */
+	-webkit-text-stroke-width: 1px;
+	-webkit-text-stroke-color: black;
 }
 
 li:hover {
 	background-color: lightgray;
+}
+
+li.selected {
+	background-color: gray;
 }

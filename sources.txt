@@ -3,3 +3,5 @@ Google (developers.google, console.developers.google, code.google)
 Stackoverflow
 
 jQuery
+
+http://css-tricks.com/adding-stroke-to-web-text/
