@@ -39,10 +39,6 @@ $(document).on("ready", function() {
 			this.types = ko.observableArray(types);
 			
 			// Image url associated with this location
-			//TODO change this to a computed observable that attempts
-			//to set to the streetview image, but sets to noImage if
-			//fails
-			//this.img = ko.observable("url('img/noImage.png')");
 			this.img = ko.computed(function() {
 				var url = "url('http://maps.googleapis.com/maps/api/streetview?size=500x350&location=";
 				url += locSelf.latitude() + ", " + locSelf.longitude();
@@ -82,8 +78,13 @@ $(document).on("ready", function() {
 			var latLng;
 			var location;
 			var marker;
+			// Address is not always returned
+			var address = null;
 			for (var i = 0; i < places.length; i++) {
 				place = places[i];
+				if (place.formatted_address != null) {
+					address = place.formatted_address;
+				}
 				marker = self.createMarker(place);
 				latLng = place.geometry.location;
 				location = new Location(
@@ -99,11 +100,8 @@ $(document).on("ready", function() {
 				// to find the location from the marker.
 				marker.set("myLocation", location);
 				self.locations.push(location);
+				address = null;
 			}
-			//self.infowindow = new google.maps.InfoWindow({content: $("#infoWindow")[0]});
-			//ko.cleanNode($("#infoWindow")[0]);
-			//ko.applyBindings(self, $("#infoWindow")[0]);
-			//self.infowindow.setContent($("#infoWindow")[0]);
 		}
 		
 		// Helper function to create Google Markers
@@ -128,23 +126,6 @@ $(document).on("ready", function() {
 			self.locations.removeAll();
 		}
 		
-		// Returns the Location associated with the passed Marker
-		this.getLocationFromMarker = function(marker) {
-			var found = false;
-			var location = null;
-			var i = 0;
-			var len = self.locations().length;
-			while (!found && i < len) {
-				if (marker === self.locations()[i].marker)
-				{
-					location = self.locations[i];
-					found = true;
-				}
-				i++;
-			}
-			return location;
-		}
-		
 		// Setup the initial locations
 		this.initLocations = function() {
 			var request = {
@@ -157,35 +138,7 @@ $(document).on("ready", function() {
 		// Callback for places search
 		this.placesCallback = function(results, status) {
 			if (status == google.maps.places.PlacesServiceStatus.OK) {
-				var place;
-				var latLng;
-				var location;
-				var marker;
-				// Address is not always returned
-				var address = null;
-				for (var i = 0; i < results.length; i++) {
-					place = results[i];
-					if (place.formatted_address != null)
-					{
-						address = place.formatted_address;
-					}
-					marker = self.createMarker(place);
-					latLng = place.geometry.location;
-					location = new Location(
-							latLng.lat(),
-							latLng.lng(),
-							place.name,
-							place.vicinity,
-							address,
-							place.type,
-							marker
-					);
-					// Add "custom property" location to marker to make it possible
-					// to find the location from the marker.
-					marker.set("myLocation", location);
-					self.locations.push(location);
-					address = null;
-				}
+				self.addSearchLocations(results);
 			}
 		}
 		
