@@ -2,7 +2,7 @@
  * Main JavaScript file for the Nanodegree Map
  * Author: Aaron Dugger
  * Creation Date: 02/02/2015
- * Last Edit Date: 02/02/2015
+ * Last Edit Date: 02/22/2015
  */
 
 $(document).on("ready", function() {
@@ -17,7 +17,7 @@ $(document).on("ready", function() {
 		/**
 		 * This is the model for a location on the map.
 		 */
-		var Location = function(lat, long, name, vicinity, address, types, marker) {
+		var Location = function(lat, long, name, vicinity, address, marker) {
 			var locSelf = this;
 			
 			// Latitude of this location
@@ -34,9 +34,6 @@ $(document).on("ready", function() {
 			
 			// Formatted address string
 			this.address = ko.observable(address);
-			
-			// Type of the location
-			this.types = ko.observableArray(types);
 			
 			// Image url associated with this location
 			this.img = ko.computed(function() {
@@ -66,6 +63,53 @@ $(document).on("ready", function() {
 			this.unsetMarker = function() {
 				locSelf.marker.setMap(null);
 			}
+			
+			// Wiki description
+			this.wikiDescription = ko.observable("");
+			
+			// Wiki URL
+			this.wikiUrl = ko.observable("#");
+			
+			// Make AJAX call to get and set wiki info for this location
+			this.getWikiInfo = function() {
+				$.ajax( {
+					url: "http://en.wikipedia.org/w/api.php",
+				    data: {
+				    	"action": "opensearch",
+				    	"search": locSelf.name(),
+				    	"limit": "1"
+				    },
+				    dataType:"jsonp",
+				    type:"GET",
+				    headers: { "Api-User-Agent": "UDACITY NANODEGREE MAP; ADUGGER" }
+				})
+				.done(function(data, textStatus, jqXHR) {
+					locSelf.wikiDescription(data[2][0]);
+					locSelf.wikiUrl(data[3][0]);
+					
+					// If description is null, reset to ""
+					if (locSelf.wikiDescription() == null)
+					{
+						locSelf.wikiDescription("");
+					}
+					
+					// Sometimes there is a URL but no description
+					if (locSelf.wikiDescription() == "" && locSelf.wikiUrl() != null) {
+						locSelf.wikiDescription("Click here for more info.");
+					}
+					// If there is no URL or description, set generic not found description
+					else if (locSelf.wikiDescription() == "" &&
+							(locSelf.wikiUrl() == "" || locSelf.wikiUrl() == null)) {
+						locSelf.wikiDescription("No Wikipedia data was found for this location.");
+						//locSelf.wikiUrl("#");
+					}
+				})
+				.fail(function(jqXHR, textStatus, errorThrown) {
+					locSelf.wikiDescription("There was a problem retreiving Wiki data.");
+					locSelf.wikiUrl("#");
+					console.log(errorThrown);
+				});
+			}
 		}
 		
 		// Replace contents of self.locations with places returned
@@ -93,7 +137,6 @@ $(document).on("ready", function() {
 						place.name,
 						place.vicinity,
 						place.formatted_address,
-						place.types,
 						marker
 				);
 				// Add "custom property" location to marker to make it possible
@@ -101,6 +144,9 @@ $(document).on("ready", function() {
 				marker.set("myLocation", location);
 				self.locations.push(location);
 				address = null;
+				
+				// Get MediaWiki info about location and add to location (AJAX)
+				location.getWikiInfo();
 			}
 		}
 		

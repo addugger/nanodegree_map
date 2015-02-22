@@ -18,11 +18,17 @@
 			<li data-bind="text: name, css: {selected: selected}, click: $root.selectCurrentLocation"></li>
 		</ul>
 	</div>
-	<div id="infoWindow">
-		<div id="innerInfo" data-bind="style: { backgroundImage: currentLocation().img }">
-			<div><h2 data-bind="text: currentLocation().name"></h2></div>
+	<div id="infoWindow" data-bind="with: currentLocation()">
+		<div id="innerInfo" data-bind="style: { backgroundImage: img }">
+			<div><h2 data-bind="text: name"></h2></div>
 			<div id="infoDiv">
-				<p data-bind="text: currentLocation().address"></p>
+				<p data-bind="if: address">
+					<span data-bind=" text: address"></span>
+				</p>
+				<p data-bind="ifnot: address">
+					<span data-bind="text: vicinity"></span>
+				</p>
+				<a data-bind="text: wikiDescription, attr: { href: wikiUrl }"></a>
 			</div>
 		</div>
 	</div>

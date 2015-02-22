@@ -5,3 +5,7 @@ Stackoverflow
 jQuery
 
 http://css-tricks.com/adding-stroke-to-web-text/
+
+http://www.mediawiki.org/wiki/
+
+wwww.w3schools.com

@@ -1,9 +1,14 @@
 @CHARSET "ISO-8859-1";
 
+#infoWindow {
+	display: none;
+}
+
 #infoDiv {
-	margin-top: 100px;
-	height: 150px;
+	height: 100px;
 	font-weight: bold;
+	position: absolute;
+	bottom: 25px;
 }
 
 #innerInfo {
@@ -11,6 +16,7 @@
 	width: 500px;
 	padding: 5px;
 	background-repeat: no-repeat;
+	position: relative;
 }
 
 #innerInfo div {
