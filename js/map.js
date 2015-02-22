@@ -49,8 +49,7 @@ $(document).on("ready", function() {
 			// Whether or not this location is currently selected
 			this.selected = ko.computed(function() {
 				var rtn = false;
-				if (self.currentLocation != null)
-				{
+				if (self.currentLocation != null) {
 					rtn = (locSelf == self.currentLocation());
 				}
 				return rtn;
@@ -88,8 +87,7 @@ $(document).on("ready", function() {
 					locSelf.wikiUrl(data[3][0]);
 					
 					// If description is null, reset to ""
-					if (locSelf.wikiDescription() == null)
-					{
+					if (locSelf.wikiDescription() == null) {
 						locSelf.wikiDescription("");
 					}
 					
