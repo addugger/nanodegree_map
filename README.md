@@ -1,6 +1,9 @@
 # nanodegree_map
 Code base for Udacity fontend web dev neighborhood map project.
 
+To start the application, place the files in a web server and navigate to index.html
+in your web browser of choice.
+
 The page opens initially as a google map of the northern part of Springfield, OH, 
 where my home is located.  The initial search that populates the page is a google area
 ("near by") search centered on the initial map with wide open parameters, meaning it
