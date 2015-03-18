@@ -6,7 +6,8 @@
  */
 
 $(document).on("ready", function() {
-
+	
+	"use strict";
 	
 	/**
 	 * ViewModel for the map app.
@@ -49,7 +50,7 @@ $(document).on("ready", function() {
 			// Whether or not this location is currently selected
 			this.selected = ko.computed(function() {
 				var rtn = false;
-				if (self.currentLocation != null) {
+				if (self.currentLocation !== null) {
 					rtn = (locSelf == self.currentLocation());
 				}
 				return rtn;
@@ -61,7 +62,7 @@ $(document).on("ready", function() {
 			// Detach the locations marker from the map
 			this.unsetMarker = function() {
 				locSelf.marker.setMap(null);
-			}
+			};
 			
 			// Wiki description
 			this.wikiDescription = ko.observable("");
@@ -87,17 +88,17 @@ $(document).on("ready", function() {
 					locSelf.wikiUrl(data[3][0]);
 					
 					// If description is null, reset to ""
-					if (locSelf.wikiDescription() == null) {
+					if (locSelf.wikiDescription() === null) {
 						locSelf.wikiDescription("");
 					}
 					
 					// Sometimes there is a URL but no description
-					if (locSelf.wikiDescription() == "" && locSelf.wikiUrl() != null) {
+					if (locSelf.wikiDescription() === "" && locSelf.wikiUrl() !== null) {
 						locSelf.wikiDescription("Click here for more info.");
 					}
 					// If there is no URL or description, set generic not found description
-					else if (locSelf.wikiDescription() == "" &&
-							(locSelf.wikiUrl() == "" || locSelf.wikiUrl() == null)) {
+					else if (locSelf.wikiDescription() === "" &&
+							(locSelf.wikiUrl() === "" || locSelf.wikiUrl() === null)) {
 						locSelf.wikiDescription("No Wikipedia data was found for this location.");
 						//locSelf.wikiUrl("#");
 					}
@@ -107,8 +108,8 @@ $(document).on("ready", function() {
 					locSelf.wikiUrl("#");
 					console.log(errorThrown);
 				});
-			}
-		}
+			};
+		};
 		
 		// Replace contents of self.locations with places returned
 		// from a searchBox search
@@ -124,7 +125,7 @@ $(document).on("ready", function() {
 			var address = null;
 			for (var i = 0; i < places.length; i++) {
 				place = places[i];
-				if (place.formatted_address != null) {
+				if (place.formatted_address !== null) {
 					address = place.formatted_address;
 				}
 				marker = self.createMarker(place);
@@ -146,7 +147,7 @@ $(document).on("ready", function() {
 				// Get MediaWiki info about location and add to location (AJAX)
 				location.getWikiInfo();
 			}
-		}
+		};
 		
 		// Helper function to create Google Markers
 		this.createMarker = function(place) {
@@ -160,7 +161,7 @@ $(document).on("ready", function() {
 			});
 		
 			return marker;
-		}
+		};
 		
 		// Empties the locations array and unsets all the associated markers
 		this.emptyLocations = function() {
@@ -168,7 +169,7 @@ $(document).on("ready", function() {
 				self.locations()[i].unsetMarker();
 			}
 			self.locations.removeAll();
-		}
+		};
 		
 		// Setup the initial locations
 		this.initLocations = function() {
@@ -177,20 +178,20 @@ $(document).on("ready", function() {
 				radius: 500
 			};
 			self.places.nearbySearch(request, self.placesCallback);
-		}
+		};
 		
 		// Callback for places search
 		this.placesCallback = function(results, status) {
 			if (status == google.maps.places.PlacesServiceStatus.OK) {
 				self.addSearchLocations(results);
 			}
-		}
+		};
 		
 		this.selectCurrentLocation = function(location) {
 			self.currentLocation(location);
 			self.infowindow.setContent($("#infoWindow").html());
 			self.infowindow.open(self.map, location.marker);
-		}
+		};
 		
 		this.initBounds = function() {
 			return new google.maps.LatLngBounds(
@@ -198,38 +199,38 @@ $(document).on("ready", function() {
 	    		new google.maps.LatLng(39.96514861499254, -83.77584309768679)
 		    );
 			
-		}
+		};
 		
 		// Initialize the Google map
 		this.initMap = function() {
 			// Bind map to the html
 			self.map = new google.maps.Map($("#map-canvas")[0]);
 			// Set initial bounds of the map
-	        self.map.fitBounds(self.bounds);
-	        
-	        // When the map pans or zooms, reset the bounds for the searchBox
-	        // and autoComplete
-	        google.maps.event.addListener(self.map, "idle", function() {
-	        	var bounds = self.map.getBounds();
-	        	self.searchBox.setBounds(bounds);
-	        	self.searchAutoComp.setBounds(bounds);
-	        });
-		}
+		        self.map.fitBounds(self.bounds);
+		        
+		        // When the map pans or zooms, reset the bounds for the searchBox
+		        // and autoComplete
+		        google.maps.event.addListener(self.map, "idle", function() {
+		        	var bounds = self.map.getBounds();
+		        	self.searchBox.setBounds(bounds);
+		        	self.searchAutoComp.setBounds(bounds);
+		        });
+		};
 		
 		// Initiailze the Google Place Search Box
 		this.initSearchBar = function() {
 			var searchInput = $("#search-box")[0];
-	        self.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchInput);
-	        self.searchBox = new google.maps.places.SearchBox(searchInput);
-	        self.searchBox.setBounds(self.bounds);
-	        //add autocomplete to search-box
-	        self.searchAutoComp = new google.maps.places.Autocomplete(searchInput);
-	        self.searchAutoComp.setBounds(self.bounds);
-	        
-	        google.maps.event.addListener(self.searchBox, 'places_changed', function() {
-	            self.addSearchLocations(self.searchBox.getPlaces());
-	        });
-		}
+		        self.map.controls[google.maps.ControlPosition.TOP_LEFT].push(searchInput);
+		        self.searchBox = new google.maps.places.SearchBox(searchInput);
+		        self.searchBox.setBounds(self.bounds);
+		        //add autocomplete to search-box
+		        self.searchAutoComp = new google.maps.places.Autocomplete(searchInput);
+		        self.searchAutoComp.setBounds(self.bounds);
+		        
+		        google.maps.event.addListener(self.searchBox, 'places_changed', function() {
+		            self.addSearchLocations(self.searchBox.getPlaces());
+		        });
+		};
 		
 		//list of locations currently available
 		this.locations = ko.observableArray();
@@ -257,7 +258,7 @@ $(document).on("ready", function() {
 		
 		this.initSearchBar();
 		this.initLocations();
-	}
+	};
 	
 	ko.applyBindings(new ViewModel());
 });
